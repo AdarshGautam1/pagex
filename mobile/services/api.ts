@@ -2,21 +2,25 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
 
+const DEFAULT_API_URL = 'https://pagex.onrender.com';
+
 function getApiBaseUrl(): string {
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
-    return envUrl;
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  const targetUrl = (envUrl || DEFAULT_API_URL).replace(/\/+$/, '');
+
+  // If local dev environment is explicitly specified, auto-detect host machine IP
+  if (targetUrl.includes('localhost') || targetUrl.includes('127.0.0.1')) {
+    const hostUri = Constants.expoConfig?.hostUri;
+    if (hostUri) {
+      const ip = hostUri.split(':')[0];
+      return `http://${ip}:4000`;
+    }
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:4000';
+    }
   }
-  // Auto-detect host machine IP when running on physical device or emulator via Expo
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (hostUri) {
-    const ip = hostUri.split(':')[0];
-    return `http://${ip}:4000`;
-  }
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:4000';
-  }
-  return envUrl || 'http://localhost:4000';
+
+  return targetUrl;
 }
 
 const API_BASE = getApiBaseUrl();

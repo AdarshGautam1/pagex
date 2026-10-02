@@ -1,0 +1,35 @@
+{
+  "cli": {
+    "version": ">= 15.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tpxcamrnhjvmyacbgfmu.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_NW2HA0BZAmvt9R9QZXnRkA_BMC62ERB",
+        "EXPO_PUBLIC_API_URL": "https://pagex.onrender.com"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tpxcamrnhjvmyacbgfmu.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_NW2HA0BZAmvt9R9QZXnRkA_BMC62ERB",
+        "EXPO_PUBLIC_API_URL": "https://pagex.onrender.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
