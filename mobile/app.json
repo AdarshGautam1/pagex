@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "scheme": "pagex",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#F2EEE6"
     },
@@ -47,6 +47,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8d773a11-cef3-4469-a72d-55c00c3e5176"
+      }
     }
   }
 }
