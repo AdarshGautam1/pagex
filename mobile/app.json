@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "PAGEX",
+    "slug": "pagex",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "pagex",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F2EEE6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pagex.elibrary"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F2EEE6",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.pagex.elibrary",
+      "predictiveBackGestureEnabled": false
+    },
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#00000000",
+      "translucent": true
+    },
+    "androidNavigationBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#F2EEE6"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-image"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
