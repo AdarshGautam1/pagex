@@ -128,3 +128,29 @@ export interface LeaderboardEntry {
   weekly_xp: number;
   rank: number;
 }
+
+// ---- Community Notes ----
+export type CommunityNoteStatus = 'pending' | 'approved' | 'rejected';
+
+export interface CommunityNote {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  subject: string;
+  semester: string | null;
+  unit: string | null;
+  storage_path: string;
+  file_name: string;
+  file_size: number | null;
+  status: CommunityNoteStatus;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+  };
+}
+

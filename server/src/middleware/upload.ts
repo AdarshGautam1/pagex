@@ -47,3 +47,35 @@ export const uploadBookFiles = multer({
   { name: 'cover', maxCount: 1 },
   { name: 'pdf', maxCount: 1 },
 ]);
+
+export const uploadCommunityNoteFile = multer({
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB maximum
+    files: 1,
+  },
+  fileFilter: (
+    req: Request,
+    file: Express.Multer.File,
+    cb: multer.FileFilterCallback
+  ) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    if (file.fieldname === 'pdf' || file.fieldname === 'file') {
+      const isExtValid = ext === '.pdf';
+      const isMimeValid =
+        ALLOWED_PDF_MIMES.has(file.mimetype) ||
+        file.mimetype === 'application/octet-stream' ||
+        file.mimetype === 'application/x-pdf';
+
+      if (!isExtValid || !isMimeValid) {
+        cb(new BadRequestError('Uploaded file must be a valid PDF document (.pdf)'));
+        return;
+      }
+      cb(null, true);
+    } else {
+      cb(new BadRequestError(`Unexpected field '${file.fieldname}'. Expected 'pdf' or 'file'`));
+    }
+  },
+}).single('pdf');
+

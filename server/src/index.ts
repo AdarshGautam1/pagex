@@ -12,9 +12,11 @@ import readingRoutes from './routes/reading.routes';
 import statsRoutes from './routes/stats.routes';
 import achievementsRoutes from './routes/achievements.routes';
 import bookmarksRoutes from './routes/bookmarks.routes';
+import communityRoutes from './routes/community.routes';
 import adminBooksRoutes from './routes/admin.books.routes';
 import adminCategoriesRoutes from './routes/admin.categories.routes';
 import adminAuditRoutes from './routes/admin.audit.routes';
+import adminCommunityRoutes from './routes/admin.community.routes';
 
 dotenv.config();
 
@@ -51,11 +53,14 @@ app.use('/reading', readingRoutes);
 app.use('/stats', statsRoutes);
 app.use('/achievements', achievementsRoutes);
 app.use('/bookmarks', bookmarksRoutes);
+app.use('/community-notes', communityRoutes);
 
 // Mount admin routes
 app.use('/admin/books', adminBooksRoutes);
 app.use('/admin/categories', adminCategoriesRoutes);
+app.use('/admin/community-notes', adminCommunityRoutes);
 app.use('/admin', adminAuditRoutes);
+
 
 // 404 Catch-all handler
 app.use((req, res, next) => {

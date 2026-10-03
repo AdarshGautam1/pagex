@@ -9,8 +9,10 @@
     "start": "node dist/index.js",
     "test": "jest --forceExit --detectOpenHandles",
     "promote-admin": "tsx scripts/promote-admin.ts",
-    "seed-books": "tsx scripts/seed-demo-books.ts"
+    "seed-books": "tsx scripts/seed-demo-books.ts",
+    "init-bucket": "tsx scripts/init-community-bucket.ts"
   },
+
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "cors": "^2.8.5",

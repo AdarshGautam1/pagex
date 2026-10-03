@@ -1,14 +1,44 @@
 import { Router, Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { supabaseAdmin } from '../lib/supabase';
+import { updateReadingStreak } from '../services/streak.service';
 
 const router = Router();
+
+// POST /stats/check-in - Record daily active streak for authenticated user
+router.post('/check-in', authMiddleware, async (req: Request, res: Response, next) => {
+  try {
+    const user = req.user!;
+    const userId = user.id;
+    const clientDate = (req.headers['x-client-date'] as string) || (req.body?.date as string);
+    const todayDate = clientDate && /^\d{4}-\d{2}-\d{2}$/.test(clientDate)
+      ? clientDate
+      : new Date().toISOString().split('T')[0];
+
+    const result = await updateReadingStreak(userId, todayDate);
+    res.json({
+      message: 'Daily activity recorded',
+      streak: {
+        current: result.currentStreak,
+        longest: result.longestStreak,
+        isNewDay: result.isNewDay,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /stats/me - Comprehensive personal reading statistics
 router.get('/me', authMiddleware, async (req: Request, res: Response, next) => {
   try {
     const user = req.user!;
     const userId = user.id;
+
+    const clientDate = (req.headers['x-client-date'] as string)?.trim();
+    const todayDate = clientDate && /^\d{4}-\d{2}-\d{2}$/.test(clientDate)
+      ? clientDate
+      : new Date().toISOString().split('T')[0];
 
     // 1. Fetch user_stats
     const { data: statsData } = await supabaseAdmin
@@ -17,12 +47,32 @@ router.get('/me', authMiddleware, async (req: Request, res: Response, next) => {
       .eq('user_id', userId)
       .maybeSingle();
 
-    const stats = statsData || {
-      current_streak: 0,
-      longest_streak: 0,
-      total_xp: 0,
-      last_activity_date: null,
-    };
+    let stats = statsData;
+
+    // If user stats do not exist, or streak is 0, or user visits on a new day, update/ensure streak
+    if (!stats || stats.current_streak === 0 || !stats.last_activity_date || stats.last_activity_date !== todayDate) {
+      try {
+        const streakResult = await updateReadingStreak(userId, todayDate);
+        stats = {
+          user_id: userId,
+          current_streak: streakResult.currentStreak,
+          longest_streak: streakResult.longestStreak,
+          total_xp: stats?.total_xp || 0,
+          last_activity_date: todayDate,
+        };
+      } catch (e) {
+        console.warn('Could not auto-sync daily streak in /stats/me:', e);
+      }
+    }
+
+    if (!stats) {
+      stats = {
+        current_streak: 1,
+        longest_streak: 1,
+        total_xp: 0,
+        last_activity_date: todayDate,
+      };
+    }
 
     // 2. Aggregate total reading seconds and unique books read
     const { data: sessions } = await supabaseAdmin
