@@ -15,6 +15,8 @@ export default function AdminLayout() {
       <Stack.Screen name="book-form" options={{ presentation: 'modal' }} />
       <Stack.Screen name="categories" />
       <Stack.Screen name="audit" />
+      <Stack.Screen name="community-notes" />
     </Stack>
+
   );
 }

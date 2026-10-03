@@ -19,13 +19,19 @@ export default function AdminDashboardScreen() {
   const router = useRouter();
 
   const [stats, setStats] = useState<any>(null);
+  const [personalStats, setPersonalStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchStats = async () => {
     try {
-      const data = await api.getAdminStats();
+      await api.checkIn().catch(() => null);
+      const [data, meData] = await Promise.all([
+        api.getAdminStats(),
+        api.getMyStats().catch(() => null),
+      ]);
       setStats(data);
+      if (meData) setPersonalStats(meData);
     } catch (err) {
       console.warn('Failed to load admin stats:', err);
     } finally {
@@ -51,20 +57,28 @@ export default function AdminDashboardScreen() {
     );
   }
 
+  const adminStreak = Math.max(1, personalStats?.streak?.current || 1);
+
   return (
     <View style={styles.container}>
       <Header
         title="Admin Console"
         subtitle="Platform governance & oversight"
         rightAction={
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push('/(student)/(tabs)')}
-            style={styles.switchBtn}
-          >
-            <Ionicons name="book-outline" size={16} color={colors.white} />
-            <Text style={styles.switchBtnText}>Student View</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.streakBadge}>
+              <Ionicons name="flame" size={14} color={colors.accent} />
+              <Text style={styles.streakBadgeText}>{adminStreak}d</Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push('/(student)/(tabs)')}
+              style={styles.switchBtn}
+            >
+              <Ionicons name="book-outline" size={16} color={colors.white} />
+              <Text style={styles.switchBtnText}>Student View</Text>
+            </TouchableOpacity>
+          </View>
         }
       />
 
@@ -163,7 +177,26 @@ export default function AdminDashboardScreen() {
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.inkSecondary} />
         </TouchableOpacity>
+
+        {/* Module 4: Community Notes */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push('/(admin)/community-notes' as any)}
+          style={styles.moduleCard}
+        >
+          <View style={styles.moduleIconWrap}>
+            <Ionicons name="documents-outline" size={24} color={colors.accent} />
+          </View>
+          <View style={styles.moduleInfo}>
+            <Text style={styles.moduleTitle}>Community Notes Moderation</Text>
+            <Text style={styles.moduleSubtitle}>
+              Review, approve, reject, or remove student-uploaded notes and study PDFs
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.inkSecondary} />
+        </TouchableOpacity>
       </ScrollView>
+
     </View>
   );
 }
@@ -183,6 +216,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF3E8',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(230, 81, 0, 0.2)',
+    gap: 3,
+  },
+  streakBadgeText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: colors.accent,
   },
   switchBtn: {
     flexDirection: 'row',

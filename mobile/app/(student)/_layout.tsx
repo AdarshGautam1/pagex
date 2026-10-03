@@ -15,6 +15,10 @@ export default function StudentLayout() {
       <Stack.Screen name="reader/[id]" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="bookmarks" options={{ presentation: 'card' }} />
       <Stack.Screen name="achievements" options={{ presentation: 'card' }} />
+      <Stack.Screen name="community-notes/index" options={{ presentation: 'card' }} />
+      <Stack.Screen name="community-notes/upload" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="downloads" options={{ presentation: 'card' }} />
     </Stack>
+
   );
 }

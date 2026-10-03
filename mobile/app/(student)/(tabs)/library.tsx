@@ -71,9 +71,28 @@ export default function LibraryScreen() {
     <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
       {/* Top Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Library</Text>
-        <Text style={styles.headerSubtitle}>Explore the curated digital catalogue</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>Library</Text>
+          <Text style={styles.headerSubtitle}>Explore the curated digital catalogue</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push('/(student)/community-notes' as any)}
+            style={styles.headerNavBtn}
+          >
+            <Ionicons name="document-text-outline" size={18} color={colors.accent} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push('/(student)/downloads' as any)}
+            style={styles.headerNavBtn}
+          >
+            <Ionicons name="cloud-offline-outline" size={18} color={colors.success} />
+          </TouchableOpacity>
+        </View>
       </View>
+
 
       {/* Search Input */}
       <View style={styles.searchBar}>
@@ -165,10 +184,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
+  headerNavBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerTitle: {
+
     fontFamily: fonts.heading,
     fontSize: 28,
     color: colors.ink,

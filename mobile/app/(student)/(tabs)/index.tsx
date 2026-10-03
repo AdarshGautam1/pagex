@@ -38,6 +38,9 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     try {
+      // Ensure daily active check-in is recorded so today's streak is up to date
+      await api.checkIn().catch(() => null);
+
       const [statsData, booksData, achData, leadData] = await Promise.all([
         api.getMyStats().catch(() => null),
         api.getBooks({ limit: 6 }).catch(() => ({ books: [] })),
@@ -67,6 +70,10 @@ export default function HomeScreen() {
   }, []);
 
   const featuredBook = books.length > 0 ? books[0] : null;
+
+  // Active streak counts (ensures active logged-in user has at least 1d streak)
+  const currentStreak = Math.max(1, stats?.streak?.current || 1);
+  const longestStreak = Math.max(currentStreak, stats?.streak?.longest || 1);
 
   // Days of current week for habit row
   const daysOfWeek = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -101,8 +108,8 @@ export default function HomeScreen() {
       <View style={styles.statsRow}>
         <StatCard
           label="Reading Streak"
-          value={`${stats?.streak?.current || 0}d`}
-          subtext={`Best: ${stats?.streak?.longest || 0} days`}
+          value={`${currentStreak}d`}
+          subtext={`Best: ${longestStreak} days`}
           highlight
           icon={<Ionicons name="flame" size={20} color={colors.accent} />}
         />
@@ -115,14 +122,59 @@ export default function HomeScreen() {
         />
       </View>
 
+      {/* Quick Study Hub: Community Notes & Offline Downloads */}
+      <View style={styles.quickHubRow}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push('/(student)/community-notes' as any)}
+          style={styles.quickHubCard}
+        >
+          <View style={[styles.quickHubIcon, { backgroundColor: colors.accentSubtle }]}>
+            <Ionicons name="document-text" size={18} color={colors.accent} />
+          </View>
+          <View style={styles.quickHubTextWrap}>
+            <Text style={styles.quickHubTitle}>Community Notes</Text>
+            <Text style={styles.quickHubSubtitle}>Peer study guides</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={14} color={colors.inkSecondary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push('/(student)/downloads' as any)}
+          style={styles.quickHubCard}
+        >
+          <View style={[styles.quickHubIcon, { backgroundColor: '#E8ECE6' }]}>
+            <Ionicons name="cloud-offline" size={18} color={colors.success} />
+          </View>
+          <View style={styles.quickHubTextWrap}>
+            <Text style={styles.quickHubTitle}>Downloads</Text>
+            <Text style={styles.quickHubSubtitle}>Offline storage</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={14} color={colors.inkSecondary} />
+        </TouchableOpacity>
+      </View>
+
       {/* Weekly Activity Habit Tracker */}
       <View style={styles.cardSection}>
+
         <Text style={styles.sectionHeader}>Weekly Reading Habit</Text>
         <View style={styles.habitRow}>
           {daysOfWeek.map((day, idx) => {
             const isToday = idx === todayIdx;
-            const isPast = idx <= todayIdx;
-            const hasActivity = isPast && (stats?.streak?.current || 0) > 0;
+
+            // Calculate date for this day of current week (YYYY-MM-DD)
+            const dayOffset = idx - todayIdx;
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + dayOffset);
+            const dateStr = targetDate.toLocaleDateString('en-CA');
+
+            // Day has activity if today (active login), within consecutive streak ending today, or has logged activity
+            const isInStreak = idx <= todayIdx && idx >= (todayIdx - currentStreak + 1);
+            const hasRecordedActivity = stats?.weeklyActivity?.some(
+              (a: any) => a.activity_date === dateStr && (a.reading_seconds > 0 || a.xp_earned > 0)
+            );
+            const hasActivity = isToday || isInStreak || Boolean(hasRecordedActivity);
 
             return (
               <View key={idx} style={styles.dayCol}>
@@ -391,4 +443,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.accent,
   },
+  quickHubRow: {
+    flexDirection: 'row',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  quickHubCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    padding: spacing.sm + 2,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  quickHubIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.xs + 2,
+  },
+  quickHubTextWrap: {
+    flex: 1,
+  },
+  quickHubTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 12,
+    color: colors.ink,
+  },
+  quickHubSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    color: colors.inkSecondary,
+  },
 });
+

@@ -44,6 +44,9 @@ Go to **Project Settings → API** and note:
 3. Click **New bucket** again
    - Name: `pdfs`
    - Public bucket: **No** (private)
+4. Click **New bucket** again
+   - Name: `community-notes`
+   - Public bucket: **No** (private)
 
 ### Storage Policies
 
@@ -52,9 +55,10 @@ For the **covers** bucket:
 - Add policy: Allow authenticated users to SELECT (read)
 - Add policy: Allow authenticated admins to INSERT, UPDATE, DELETE
 
-For the **pdfs** bucket:
+For the **pdfs** and **community-notes** buckets:
 - No public read policies
 - All access is through server-generated signed URLs using the service-role key
+
 
 ## 6. Verify RLS
 

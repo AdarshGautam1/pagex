@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../services/api';
@@ -154,7 +156,10 @@ export default function AdminCategoriesScreen() {
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalBackdrop}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalBackdrop}
+        >
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Add Category</Text>
             <Text style={styles.modalSubtitle}>Create a new literary genre or academic topic.</Text>
@@ -190,7 +195,7 @@ export default function AdminCategoriesScreen() {
               />
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

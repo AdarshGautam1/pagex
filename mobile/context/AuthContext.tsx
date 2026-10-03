@@ -34,6 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await api.getMe();
       setProfile(data.user);
+      // Auto check-in upon active session load/login to keep streak up-to-date
+      api.checkIn().catch(() => {});
     } catch (err) {
       console.warn('Could not fetch user profile from API:', err);
     }

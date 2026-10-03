@@ -119,6 +119,24 @@ CREATE TABLE audit_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Community Notes
+CREATE TABLE community_notes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  subject TEXT NOT NULL,
+  semester TEXT,
+  unit TEXT,
+  storage_path TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  file_size BIGINT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -135,6 +153,11 @@ CREATE INDEX idx_user_stats_xp ON user_stats(total_xp DESC);
 CREATE INDEX idx_bookmarks_user ON bookmarks(user_id);
 CREATE INDEX idx_audit_logs_created ON audit_logs(created_at DESC);
 CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX idx_community_notes_user ON community_notes(user_id);
+CREATE INDEX idx_community_notes_status ON community_notes(status);
+CREATE INDEX idx_community_notes_subject ON community_notes(subject);
+CREATE INDEX idx_community_notes_created_at ON community_notes(created_at DESC);
+
 
 -- ============================================================
 -- TRIGGER: Auto-create profile + user_stats on auth signup
@@ -188,6 +211,11 @@ CREATE TRIGGER books_updated_at
   BEFORE UPDATE ON books
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+CREATE TRIGGER community_notes_updated_at
+  BEFORE UPDATE ON community_notes
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- Security model:
@@ -211,6 +239,8 @@ ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE community_notes ENABLE ROW LEVEL SECURITY;
+
 
 -- ---- Profiles ----
 -- Authenticated users can read their own profile and basic public profile info for leaderboards.
@@ -293,8 +323,32 @@ CREATE POLICY "Users can read own bookmarks"
   TO authenticated
   USING (user_id = auth.uid());
 
+-- ---- Community Notes ----
+-- Authenticated users can read approved notes.
+CREATE POLICY "Users can read approved community notes"
+  ON community_notes FOR SELECT
+  TO authenticated
+  USING (status = 'approved');
+
+-- Users can read their own uploaded notes (pending, approved, or rejected).
+CREATE POLICY "Users can read own community notes"
+  ON community_notes FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- Admins can read all community notes across all statuses.
+CREATE POLICY "Admins can read all community notes"
+  ON community_notes FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
 -- ---- Audit Logs (SENSITIVE) ----
 -- NO client SELECT or INSERT policy. Admin reads and system writes are performed via Express service-role.
+
 
 -- ============================================================
 -- SEED DATA: Achievements

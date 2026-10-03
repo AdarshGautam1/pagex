@@ -14,7 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../../services/api';
 import { Button } from '../../../components/Button';
+import {
+  checkOfflineAvailability,
+  downloadPdfForOffline,
+} from '../../../services/downloadManager';
 import { colors, fonts, radius, spacing } from '../../../constants/theme';
+
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,6 +29,9 @@ export default function BookDetailScreen() {
   const [book, setBook] = useState<any>(null);
   const [userProgress, setUserProgress] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isOfflineAvailable, setIsOfflineAvailable] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+
 
   const fetchBook = async () => {
     if (!id) return;
@@ -31,6 +39,10 @@ export default function BookDetailScreen() {
       const data = await api.getBookDetail(id);
       setBook(data.book);
       setUserProgress(data.user_progress);
+
+      // Check offline availability
+      const offline = await checkOfflineAvailability(id, 'book');
+      setIsOfflineAvailable(offline.isAvailable);
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to load book details.');
       router.back();
@@ -39,9 +51,35 @@ export default function BookDetailScreen() {
     }
   };
 
+  const handleDownloadOffline = async () => {
+    if (!book || !id) return;
+    try {
+      setDownloadProgress(0);
+      await downloadPdfForOffline(
+        id,
+        'book',
+        book.title,
+        async () => {
+          const res = await api.startReading(id);
+          return res.pdf_url;
+        },
+        (progress) => {
+          setDownloadProgress(progress);
+        }
+      );
+      setIsOfflineAvailable(true);
+      setDownloadProgress(null);
+      Alert.alert('Downloaded', `"${book.title}" is now available offline.`);
+    } catch (err: any) {
+      setDownloadProgress(null);
+      Alert.alert('Download Error', err.message || 'Failed to download book for offline reading.');
+    }
+  };
+
   useEffect(() => {
     fetchBook();
   }, [id]);
+
 
   if (loading || !book) {
     return (
@@ -78,7 +116,7 @@ export default function BookDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 + Math.max(insets.bottom, 24) }]}>
         {/* Cover Image Presentation */}
         <View style={styles.coverWrapper}>
           {book.cover_url ? (
@@ -170,16 +208,51 @@ export default function BookDetailScreen() {
       </ScrollView>
 
       {/* Floating Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <Button
-          title="📖  Read Now"
-          onPress={() => router.push(`/(student)/reader/${book.id}` as any)}
-          style={styles.readButton}
-        />
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 24) + spacing.sm }]}>
+        <View style={styles.bottomBarRow}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            disabled={isOfflineAvailable || downloadProgress !== null}
+            onPress={handleDownloadOffline}
+            style={[
+              styles.offlineDownloadBtn,
+              isOfflineAvailable && styles.offlineDownloadBtnActive,
+            ]}
+          >
+            {downloadProgress !== null ? (
+              <>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.offlineBtnText}>{downloadProgress}%</Text>
+              </>
+            ) : isOfflineAvailable ? (
+              <>
+                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                <Text style={[styles.offlineBtnText, { color: colors.success }]}>Offline Ready</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="download-outline" size={18} color={colors.ink} />
+                <Text style={styles.offlineBtnText}>Download</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <Button
+            title="📖  Read Now"
+            onPress={() =>
+              router.push({
+                pathname: `/(student)/reader/[id]`,
+                params: { id: book.id, type: 'book', title: book.title },
+              } as any)
+            }
+            style={styles.readButton}
+          />
+        </View>
       </View>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -379,7 +452,34 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
+  bottomBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  offlineDownloadBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    paddingVertical: spacing.sm + 4,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 6,
+  },
+  offlineDownloadBtnActive: {
+    backgroundColor: '#F0F5EE',
+    borderColor: colors.success,
+  },
+  offlineBtnText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: colors.ink,
+  },
   readButton: {
-    width: '100%',
+    flex: 1.6,
   },
 });
+

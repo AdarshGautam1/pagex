@@ -36,6 +36,8 @@ export default function ProfileScreen() {
 
   const loadProfileData = async () => {
     try {
+      await api.checkIn().catch(() => null);
+
       const [statsData, mineAch, allAch] = await Promise.all([
         api.getMyStats().catch(() => null),
         api.getMyAchievements().catch(() => []),
@@ -178,18 +180,43 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Quick Navigation: Bookmarks */}
+      {/* Quick Navigation: Community Notes, Downloads, Bookmarks */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => router.push('/(student)/community-notes' as any)}
+        style={styles.menuRow}
+      >
+        <View style={styles.menuLeft}>
+          <Ionicons name="document-text-outline" size={20} color={colors.accent} />
+          <Text style={styles.menuText}>Community Notes</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => router.push('/(student)/downloads' as any)}
+        style={styles.menuRow}
+      >
+        <View style={styles.menuLeft}>
+          <Ionicons name="cloud-offline-outline" size={20} color={colors.success} />
+          <Text style={styles.menuText}>Downloads & Offline Library</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
+      </TouchableOpacity>
+
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => router.push('/(student)/bookmarks')}
         style={styles.menuRow}
       >
         <View style={styles.menuLeft}>
-          <Ionicons name="bookmark-outline" size={20} color={colors.accent} />
+          <Ionicons name="bookmark-outline" size={20} color={colors.gold} />
           <Text style={styles.menuText}>Saved Bookmarks</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
       </TouchableOpacity>
+
 
       {/* Reading Statistics */}
       <Text style={styles.sectionTitle}>Reading Habits & Metrics</Text>
@@ -197,13 +224,13 @@ export default function ProfileScreen() {
         <View style={styles.statsGridRow}>
           <StatCard
             label="Current Streak"
-            value={`${stats?.streak?.current || 0}d`}
+            value={`${Math.max(1, stats?.streak?.current || 1)}d`}
             icon={<Ionicons name="flame" size={18} color={colors.accent} />}
           />
           <View style={{ width: spacing.md }} />
           <StatCard
             label="Longest Streak"
-            value={`${stats?.streak?.longest || 0}d`}
+            value={`${Math.max(stats?.streak?.current || 1, stats?.streak?.longest || 1)}d`}
             icon={<Ionicons name="ribbon-outline" size={18} color={colors.gold} />}
           />
         </View>

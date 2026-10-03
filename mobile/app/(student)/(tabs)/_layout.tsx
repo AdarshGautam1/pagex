@@ -13,7 +13,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: Math.max(insets.bottom, 12) + 6,
+          bottom: Math.max(insets.bottom, 16) + 10,
           left: 18,
           right: 18,
           backgroundColor: '#FFFFFF',

@@ -45,6 +45,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Pass local client date (YYYY-MM-DD) for accurate timezone-aware streak tracking
+  headers['x-client-date'] = new Date().toLocaleDateString('en-CA');
+
   // If FormData, remove Content-Type so fetch generates the boundary correctly; otherwise application/json
   const isFormData =
     options?.body instanceof FormData ||
@@ -121,6 +124,13 @@ export const api = {
     }),
 
   // Stats & Leaderboard
+  checkIn: () =>
+    request<{
+      message: string;
+      streak: { current: number; longest: number; isNewDay: boolean };
+    }>('/stats/check-in', {
+      method: 'POST',
+    }),
   getMyStats: () =>
     request<{
       streak: { current: number; longest: number; lastActivityDate: string | null };
@@ -200,4 +210,78 @@ export const api = {
     request<{ message: string }>(`/admin/books/${id}`, {
       method: 'DELETE',
     }),
+
+  // Community Notes (Students & Shared)
+  getCommunityNotes: (params?: {
+    subject?: string;
+    semester?: string;
+    unit?: string;
+    search?: string;
+    status?: string;
+    my_notes?: boolean;
+    page?: number;
+    limit?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.subject) query.append('subject', params.subject);
+    if (params?.semester) query.append('semester', params.semester);
+    if (params?.unit) query.append('unit', params.unit);
+    if (params?.search) query.append('search', params.search);
+    if (params?.status) query.append('status', params.status);
+    if (params?.my_notes !== undefined) query.append('my_notes', String(params.my_notes));
+    if (params?.page) query.append('page', String(params.page));
+    if (params?.limit) query.append('limit', String(params.limit));
+    const qs = query.toString();
+    return request<{ notes: any[]; total: number; page: number; totalPages: number }>(
+      `/community-notes${qs ? `?${qs}` : ''}`
+    );
+  },
+  getCommunityNoteDetail: (id: string) =>
+    request<{ note: any; pdf_url: string }>(`/community-notes/${id}`),
+  uploadCommunityNote: (formData: FormData) =>
+    request<{ message: string; note: any }>('/community-notes', {
+      method: 'POST',
+      body: formData,
+    }),
+  deleteCommunityNote: (id: string) =>
+    request<{ message: string }>(`/community-notes/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // Admin Community Notes
+  getAdminCommunityNotes: (params?: {
+    status?: string;
+    subject?: string;
+    semester?: string;
+    unit?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.append('status', params.status);
+    if (params?.subject) query.append('subject', params.subject);
+    if (params?.semester) query.append('semester', params.semester);
+    if (params?.unit) query.append('unit', params.unit);
+    if (params?.search) query.append('search', params.search);
+    if (params?.page) query.append('page', String(params.page));
+    if (params?.limit) query.append('limit', String(params.limit));
+    const qs = query.toString();
+    return request<{ notes: any[]; total: number; page: number; totalPages: number }>(
+      `/admin/community-notes${qs ? `?${qs}` : ''}`
+    );
+  },
+  approveAdminCommunityNote: (id: string) =>
+    request<{ message: string; note: any }>(`/admin/community-notes/${id}/approve`, {
+      method: 'PATCH',
+    }),
+  rejectAdminCommunityNote: (id: string) =>
+    request<{ message: string; note: any }>(`/admin/community-notes/${id}/reject`, {
+      method: 'PATCH',
+    }),
+  deleteAdminCommunityNote: (id: string) =>
+    request<{ message: string }>(`/admin/community-notes/${id}`, {
+      method: 'DELETE',
+    }),
 };
+

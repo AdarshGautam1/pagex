@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,11 +21,36 @@ export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { signIn } = useAuth();
+  const scrollRef = useRef<ScrollView>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardVisible(true);
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -56,17 +82,30 @@ export default function LoginScreen() {
     setErrorMessage('');
   };
 
+  const extraKeyboardPadding = Platform.OS === 'android' && keyboardVisible
+    ? Math.max(keyboardHeight, 280) + spacing.xl
+    : spacing.xl;
+  const bottomPadding = insets.bottom + extraKeyboardPadding;
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: bottomPadding,
+            justifyContent: keyboardVisible ? 'flex-start' : 'center',
+          },
         ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Text style={styles.logo}>PAGEX</Text>
@@ -87,10 +126,15 @@ export default function LoginScreen() {
 
           <Input
             label="EMAIL ADDRESS"
-            placeholder="student@college.edu"
+            placeholder="name@university.edu"
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
+            onFocus={() => {
+              setTimeout(() => {
+                scrollRef.current?.scrollTo({ y: 0, animated: true });
+              }, 100);
+            }}
             onChangeText={(text) => {
               setEmail(text);
               setErrorMessage('');
@@ -102,6 +146,11 @@ export default function LoginScreen() {
             placeholder="••••••••"
             secureTextEntry
             value={password}
+            onFocus={() => {
+              setTimeout(() => {
+                scrollRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }}
             onChangeText={(text) => {
               setPassword(text);
               setErrorMessage('');

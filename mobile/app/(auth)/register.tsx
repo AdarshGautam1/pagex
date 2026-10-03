@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +20,7 @@ export default function RegisterScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { signUp } = useAuth();
+  const scrollRef = useRef<ScrollView>(null);
 
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
@@ -26,6 +28,30 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardVisible(true);
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const handleRegister = async () => {
     if (!displayName || !username || !email || !password) {
@@ -50,17 +76,30 @@ export default function RegisterScreen() {
     }
   };
 
+  const extraKeyboardPadding = Platform.OS === 'android' && keyboardVisible
+    ? Math.max(keyboardHeight, 280) + spacing.xl
+    : spacing.xl;
+  const bottomPadding = insets.bottom + extraKeyboardPadding;
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: bottomPadding,
+            justifyContent: keyboardVisible ? 'flex-start' : 'center',
+          },
         ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Text style={styles.logo}>PAGEX</Text>
@@ -81,8 +120,13 @@ export default function RegisterScreen() {
 
           <Input
             label="FULL NAME"
-            placeholder="Adarsh Sharma"
+            placeholder="Full Name"
             value={displayName}
+            onFocus={() => {
+              setTimeout(() => {
+                scrollRef.current?.scrollTo({ y: 0, animated: true });
+              }, 100);
+            }}
             onChangeText={(text) => {
               setDisplayName(text);
               setErrorMessage('');
@@ -91,9 +135,14 @@ export default function RegisterScreen() {
 
           <Input
             label="USERNAME"
-            placeholder="adarsh"
+            placeholder="Username"
             autoCapitalize="none"
             value={username}
+            onFocus={() => {
+              setTimeout(() => {
+                scrollRef.current?.scrollTo({ y: 60, animated: true });
+              }, 100);
+            }}
             onChangeText={(text) => {
               setUsername(text);
               setErrorMessage('');
@@ -102,10 +151,15 @@ export default function RegisterScreen() {
 
           <Input
             label="COLLEGE EMAIL"
-            placeholder="adarsh@college.edu"
+            placeholder="name@university.edu"
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
+            onFocus={() => {
+              setTimeout(() => {
+                scrollRef.current?.scrollTo({ y: 150, animated: true });
+              }, 100);
+            }}
             onChangeText={(text) => {
               setEmail(text);
               setErrorMessage('');
@@ -117,6 +171,11 @@ export default function RegisterScreen() {
             placeholder="At least 6 characters"
             secureTextEntry
             value={password}
+            onFocus={() => {
+              setTimeout(() => {
+                scrollRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }}
             onChangeText={(text) => {
               setPassword(text);
               setErrorMessage('');
