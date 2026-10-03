@@ -203,6 +203,64 @@ describe('Community Notes Feature Tests', () => {
       expect(dbInsertArgs.user_id).toBe(studentUser.id);
       expect(dbInsertArgs.status).toBe('pending'); // Enforced pending!
     });
+
+    it('allows student to upload valid PDF note via base64 JSON payload', async () => {
+      setupAuth(studentUser, studentProfile);
+
+      const uploadMock = jest.fn().mockResolvedValue({ data: {}, error: null });
+      (supabaseAdmin.storage.from as jest.Mock).mockReturnValue({
+        upload: uploadMock,
+      });
+
+      const insertedNote = {
+        id: 'note-uuid-b64',
+        user_id: studentUser.id,
+        title: 'Physics Notes Base64',
+        subject: 'Physics',
+        status: 'pending',
+        storage_path: `${studentUser.id}/note-uuid-b64.pdf`,
+        file_name: 'physics.pdf',
+        file_size: validPdfBuffer.length,
+        created_at: new Date().toISOString(),
+      };
+
+      const insertMock = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({ data: insertedNote, error: null }),
+        }),
+      });
+
+      (supabaseAdmin.from as jest.Mock).mockImplementation((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: studentProfile, error: null }),
+          };
+        }
+        if (table === 'community_notes') {
+          return { insert: insertMock };
+        }
+        if (table === 'audit_logs') {
+          return { insert: jest.fn().mockResolvedValue({ error: null }) };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .post('/community-notes')
+        .set('Authorization', 'Bearer token')
+        .send({
+          title: 'Physics Notes Base64',
+          subject: 'Physics',
+          file_name: 'physics.pdf',
+          pdf_base64: validPdfBuffer.toString('base64'),
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.note.status).toBe('pending');
+      expect(insertMock).toHaveBeenCalled();
+    });
   });
 
   describe('Authorization & Permissions', () => {

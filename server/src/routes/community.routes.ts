@@ -73,10 +73,27 @@ router.post(
   async (req: Request, res: Response, next) => {
     try {
       const user = req.user!;
-      const file = req.file;
+      let file = req.file;
+
+      // Support base64 JSON payload fallback for mobile clients
+      if (!file && req.body?.pdf_base64) {
+        const buffer = Buffer.from(req.body.pdf_base64, 'base64');
+        file = {
+          fieldname: 'pdf',
+          originalname: req.body.file_name || 'study-note.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          buffer,
+          size: buffer.length,
+          destination: '',
+          filename: '',
+          path: '',
+          stream: null as any,
+        };
+      }
 
       if (!file) {
-        throw new BadRequestError('PDF document file is required under field "pdf".');
+        throw new BadRequestError('PDF document file is required under field "pdf" or as "pdf_base64".');
       }
 
       // Validate textual body fields

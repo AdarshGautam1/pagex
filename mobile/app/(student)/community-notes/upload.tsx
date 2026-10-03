@@ -97,22 +97,19 @@ export default function UploadCommunityNoteScreen() {
     try {
       setUploading(true);
 
-      const formData = new FormData();
-      formData.append('pdf', {
-        uri: pickedFile.uri,
-        name: pickedFile.name || 'study-note.pdf',
-        type: 'application/pdf',
-      } as any);
-
-      formData.append('title', title.trim());
-      formData.append('subject', subject.trim());
-      if (semester.trim()) formData.append('semester', semester.trim());
-      if (unit.trim()) formData.append('unit', unit.trim());
-      if (description.trim()) formData.append('description', description.trim());
-
-      await api.uploadCommunityNote(formData);
+      await api.uploadCommunityNote({
+        fileUri: pickedFile.uri,
+        fileName: pickedFile.name || 'study-note.pdf',
+        mimeType: pickedFile.mimeType || 'application/pdf',
+        title: title.trim(),
+        subject: subject.trim(),
+        semester: semester.trim() || undefined,
+        unit: unit.trim() || undefined,
+        description: description.trim() || undefined,
+      });
 
       Alert.alert(
+
         'Upload Successful! 🎉',
         'Your note has been submitted for admin review and will appear in Community Notes once approved.',
         [

@@ -1,6 +1,8 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
+
 
 const DEFAULT_API_URL = 'https://pagex.onrender.com';
 
@@ -238,15 +240,98 @@ export const api = {
   },
   getCommunityNoteDetail: (id: string) =>
     request<{ note: any; pdf_url: string }>(`/community-notes/${id}`),
-  uploadCommunityNote: (formData: FormData) =>
-    request<{ message: string; note: any }>('/community-notes', {
-      method: 'POST',
-      body: formData,
-    }),
+  uploadCommunityNote: async (params: {
+    fileUri: string;
+    fileName: string;
+    mimeType?: string;
+    title: string;
+    subject: string;
+    description?: string;
+    semester?: string;
+    unit?: string;
+  }) => {
+    const mime = params.mimeType || 'application/pdf';
+    const fileName = params.fileName || 'study-note.pdf';
+
+    // Helper to read Blob as base64 string
+    const blobToBase64 = (blob: Blob): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          const base64 = result.includes(',') ? result.split(',')[1] : result;
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+    // Strategy 1: Standard Modern FormData with Blob
+    // This matches the app's book-form.tsx pattern and works seamlessly with standard fetch
+    try {
+      const fileRes = await fetch(params.fileUri);
+      let blob = await fileRes.blob();
+      if (!blob.type || blob.type === 'application/octet-stream') {
+        blob = new Blob([blob], { type: mime });
+      }
+
+      let filePayload: any = blob;
+      if (typeof File !== 'undefined') {
+        try {
+          filePayload = new File([blob], fileName, { type: mime });
+        } catch {
+          filePayload = blob;
+        }
+      }
+
+      const formData = new FormData();
+      formData.append('pdf', filePayload, fileName);
+      formData.append('title', params.title);
+      formData.append('subject', params.subject);
+      if (params.description) formData.append('description', params.description);
+      if (params.semester) formData.append('semester', params.semester);
+      if (params.unit) formData.append('unit', params.unit);
+
+      return await request<{ message: string; note: any }>('/community-notes', {
+        method: 'POST',
+        body: formData,
+      });
+    } catch (formDataErr: any) {
+      console.warn('FormData upload error, attempting base64 fallback:', formDataErr?.message);
+
+      // Strategy 2: Base64 JSON Fallback
+      // Completely bypasses Android DocumentPicker scoped cache issues and FormDataPart incompatibilities
+      let base64 = '';
+      try {
+        const fileRes = await fetch(params.fileUri);
+        const blob = await fileRes.blob();
+        base64 = await blobToBase64(blob);
+      } catch (blobErr) {
+        console.warn('Blob base64 read failed, trying FileSystem.readAsStringAsync:', blobErr);
+        base64 = await FileSystem.readAsStringAsync(params.fileUri, {
+          encoding: 'base64',
+        });
+      }
+
+      return await request<{ message: string; note: any }>('/community-notes', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: params.title,
+          subject: params.subject,
+          description: params.description,
+          semester: params.semester,
+          unit: params.unit,
+          file_name: fileName,
+          pdf_base64: base64,
+        }),
+      });
+    }
+  },
   deleteCommunityNote: (id: string) =>
     request<{ message: string }>(`/community-notes/${id}`, {
       method: 'DELETE',
     }),
+
 
   // Admin Community Notes
   getAdminCommunityNotes: (params?: {
