@@ -57,6 +57,33 @@ export default function CommunityNotesScreen() {
 
   // Download states tracked by note ID: progress percent (number) or boolean
   const [downloadStates, setDownloadStates] = useState<Record<string, { isDownloaded: boolean; progress?: number }>>({});
+  const [adminActionLoadingId, setAdminActionLoadingId] = useState<string | null>(null);
+
+  const handleAdminApprove = async (note: CommunityNoteItem) => {
+    try {
+      setAdminActionLoadingId(note.id);
+      await api.approveAdminCommunityNote(note.id);
+      Alert.alert('Approved! 🎉', `"${note.title}" has been approved and is now live for all students.`);
+      fetchNotes();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to approve note.');
+    } finally {
+      setAdminActionLoadingId(null);
+    }
+  };
+
+  const handleAdminReject = async (note: CommunityNoteItem) => {
+    try {
+      setAdminActionLoadingId(note.id);
+      await api.rejectAdminCommunityNote(note.id);
+      Alert.alert('Rejected', `"${note.title}" has been marked as rejected.`);
+      fetchNotes();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to reject note.');
+    } finally {
+      setAdminActionLoadingId(null);
+    }
+  };
 
   const fetchNotes = async () => {
     try {
@@ -217,6 +244,21 @@ export default function CommunityNotesScreen() {
           <Ionicons name="cloud-upload-outline" size={20} color={colors.white} />
         </TouchableOpacity>
       </View>
+
+      {/* Admin Quick Review Banner (shown if logged in user is admin) */}
+      {profile?.role === 'admin' && (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push('/(admin)/community-notes' as any)}
+          style={styles.adminBanner}
+        >
+          <View style={styles.adminBannerLeft}>
+            <Ionicons name="shield-checkmark" size={18} color={colors.white} />
+            <Text style={styles.adminBannerText}>Admin: Moderate & Approve Pending Notes</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={colors.white} />
+        </TouchableOpacity>
+      )}
 
       {/* Tabs: All Notes / My Uploads */}
       <View style={styles.tabsRow}>
@@ -439,6 +481,47 @@ export default function CommunityNotesScreen() {
                       </TouchableOpacity>
                     )}
                   </View>
+
+                  {/* Admin Direct Moderation Action Bar */}
+                  {profile?.role === 'admin' && note.status === 'pending' && (
+                    <View style={styles.adminCardBar}>
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        disabled={adminActionLoadingId === note.id}
+                        onPress={() => handleAdminApprove(note)}
+                        style={styles.adminCardApproveBtn}
+                      >
+                        {adminActionLoadingId === note.id ? (
+                          <ActivityIndicator size="small" color={colors.white} />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-circle" size={16} color={colors.white} />
+                            <Text style={styles.adminCardBtnText}>Approve Note</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        disabled={adminActionLoadingId === note.id}
+                        onPress={() => handleAdminReject(note)}
+                        style={styles.adminCardRejectBtn}
+                      >
+                        <Ionicons name="close-circle" size={16} color={colors.white} />
+                        <Text style={styles.adminCardBtnText}>Reject</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Student Pending Status Guidance */}
+                  {note.status === 'pending' && profile?.role !== 'admin' && (
+                    <View style={styles.pendingNotice}>
+                      <Ionicons name="time-outline" size={15} color="#B45309" />
+                      <Text style={styles.pendingNoticeText}>
+                        Waiting for admin review. Once approved, it will be visible in the public student library.
+                      </Text>
+                    </View>
+                  )}
                 </View>
               );
             })
@@ -772,5 +855,79 @@ const styles = StyleSheet.create({
     borderColor: '#F8D7DA',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  adminBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.accent,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.md,
+  },
+  adminBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
+  },
+  adminBannerText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: colors.white,
+  },
+  adminCardBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  adminCardApproveBtn: {
+    flex: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.success,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    gap: 6,
+  },
+  adminCardRejectBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    gap: 4,
+  },
+  adminCardBtnText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 12,
+    color: colors.white,
+  },
+  pendingNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  pendingNoticeText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: '#92400E',
+    lineHeight: 16,
   },
 });

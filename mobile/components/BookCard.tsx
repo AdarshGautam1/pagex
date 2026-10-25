@@ -17,6 +17,7 @@ export interface BookItem {
   cover_url?: string | null;
   cover_path?: string | null;
   categories?: { id: string; name: string } | null;
+  progress_percent?: number;
 }
 
 interface BookCardProps {
@@ -60,6 +61,8 @@ export function BookCard({
               <Text style={styles.placeholderText}>📖</Text>
             </View>
           )}
+          {/* Tactile Book Spine Edge Shadow */}
+          <View style={styles.spineHighlight} />
         </View>
 
         <View style={styles.horizontalInfo}>
@@ -74,7 +77,12 @@ export function BookCard({
           <Text style={styles.author} numberOfLines={1}>
             {book.author}
           </Text>
-          <Text style={styles.pagesText}>{book.page_count} pages</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.pagesText}>{book.page_count} pages</Text>
+            {typeof book.progress_percent === 'number' && book.progress_percent > 0 && (
+              <Text style={styles.progressText}>{book.progress_percent}% read</Text>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -101,6 +109,8 @@ export function BookCard({
             <Text style={styles.placeholderText}>📖</Text>
           </View>
         )}
+        {/* Tactile Book Spine Edge Shadow */}
+        <View style={styles.spineHighlight} />
       </View>
       <View style={styles.gridInfo}>
         <Text style={styles.gridTitle} numberOfLines={2}>
@@ -109,6 +119,7 @@ export function BookCard({
         <Text style={styles.gridAuthor} numberOfLines={1}>
           {book.author}
         </Text>
+        <Text style={styles.gridPages}>{book.page_count}p</Text>
       </View>
     </TouchableOpacity>
   );
@@ -117,24 +128,35 @@ export function BookCard({
 const styles = StyleSheet.create({
   horizontalCard: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.md,
-    padding: spacing.sm,
+    padding: spacing.sm + 2,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
   horizontalCoverWrap: {
-    width: 65,
-    height: 95,
+    width: 68,
+    height: 102, // 2:3 aspect ratio
     borderRadius: radius.sm,
     overflow: 'hidden',
-    backgroundColor: colors.border,
+    backgroundColor: colors.surfaceHigh,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   horizontalCover: {
     width: '100%',
     height: '100%',
+  },
+  spineHighlight: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 5,
+    backgroundColor: 'rgba(0,0,0,0.18)',
   },
   horizontalInfo: {
     flex: 1,
@@ -143,23 +165,24 @@ const styles = StyleSheet.create({
   },
   tag: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.sageLight,
+    backgroundColor: colors.surfaceContainer,
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
-    borderRadius: radius.sm,
+    borderRadius: radius.xs,
     marginBottom: 4,
   },
   tagText: {
-    fontFamily: fonts.bodyMedium,
+    fontFamily: fonts.bodySemiBold,
     fontSize: 10,
-    color: colors.sage,
+    color: colors.inkSecondary,
     textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   title: {
-    fontFamily: fonts.subheading,
-    fontSize: 15,
+    fontFamily: fonts.heading,
+    fontSize: 16,
     color: colors.ink,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   author: {
     fontFamily: fonts.body,
@@ -167,11 +190,21 @@ const styles = StyleSheet.create({
     color: colors.inkSecondary,
     marginTop: 2,
   },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: 4,
+  },
   pagesText: {
     fontFamily: fonts.body,
     fontSize: 11,
     color: colors.inkMuted,
-    marginTop: 4,
+  },
+  progressText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 11,
+    color: colors.accent,
   },
   gridCard: {
     width: 140,
@@ -180,30 +213,37 @@ const styles = StyleSheet.create({
   },
   gridCoverWrap: {
     width: 140,
-    height: 200,
+    height: 210, // 2:3 aspect ratio
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: colors.surfaceActive,
+    backgroundColor: colors.surfaceHigh,
     borderWidth: 1,
     borderColor: colors.border,
+    position: 'relative',
   },
   gridCover: {
     width: '100%',
     height: '100%',
   },
   gridInfo: {
-    marginTop: spacing.xs + 2,
+    marginTop: spacing.xs + 4,
   },
   gridTitle: {
-    fontFamily: fonts.subheading,
-    fontSize: 13,
+    fontFamily: fonts.heading,
+    fontSize: 14,
     color: colors.ink,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   gridAuthor: {
     fontFamily: fonts.body,
-    fontSize: 11,
+    fontSize: 12,
     color: colors.inkSecondary,
+    marginTop: 2,
+  },
+  gridPages: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.inkMuted,
     marginTop: 2,
   },
   placeholderCover: {
@@ -211,7 +251,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceActive,
+    backgroundColor: colors.surfaceHigh,
   },
   placeholderText: {
     fontSize: 32,

@@ -11,12 +11,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../services/api';
-import { Header } from '../../components/Header';
 import { colors, fonts, radius, spacing } from '../../constants/theme';
 
 export default function BookmarksScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,12 +46,12 @@ export default function BookmarksScreen() {
 
   const handleDeleteBookmark = (id: string, pageNum: number) => {
     Alert.alert(
-      'Delete Bookmark',
-      `Are you sure you want to remove the bookmark on page ${pageNum}?`,
+      'Remove Bookmark',
+      `Delete saved reference on page ${pageNum}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Remove',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -74,21 +75,41 @@ export default function BookmarksScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Header title="Bookmarks" showBack />
+    <View style={[styles.container, { paddingTop: insets.top + spacing.xs }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          accessibilityLabel="Back"
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+        </TouchableOpacity>
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.headerTitle}>Bookmarks & Annotations</Text>
+          <Text style={styles.headerSubtitle}>
+            {bookmarks.length} {bookmarks.length === 1 ? 'PASSAGE' : 'PASSAGES'} PRESERVED
+          </Text>
+        </View>
+        <View style={{ width: 36 }} />
+      </View>
 
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: 100 + insets.bottom },
+        ]}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
         }
       >
         {bookmarks.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={{ fontSize: 44, marginBottom: 12 }}>🔖</Text>
-            <Text style={styles.emptyTitle}>No saved bookmarks yet</Text>
+            <Ionicons name="bookmark-outline" size={48} color={colors.outline} />
+            <Text style={styles.emptyTitle}>No Saved Passages</Text>
             <Text style={styles.emptySubtitle}>
-              While reading any book in the PDF reader, tap the bookmark icon to save your place.
+              While reading any codex in the archive, tap the bookmark icon to record marginalia and page references.
             </Text>
           </View>
         ) : (
@@ -104,10 +125,10 @@ export default function BookmarksScreen() {
                 </View>
                 <View style={styles.infoCol}>
                   <Text style={styles.bookTitle} numberOfLines={1}>
-                    {b.book?.title || 'Unknown Book'}
+                    {b.book?.title || 'Preserved Codex'}
                   </Text>
                   <Text style={styles.bookAuthor} numberOfLines={1}>
-                    {b.book?.author || ''}
+                    {b.book?.author || 'Unknown Author'}
                   </Text>
                   {b.note ? <Text style={styles.noteText}>"{b.note}"</Text> : null}
                 </View>
@@ -117,7 +138,7 @@ export default function BookmarksScreen() {
                 onPress={() => handleDeleteBookmark(b.id, b.page_number)}
                 style={styles.deleteBtn}
               >
-                <Ionicons name="trash-outline" size={18} color={colors.error} />
+                <Ionicons name="trash-outline" size={17} color={colors.inkMuted} />
               </TouchableOpacity>
             </View>
           ))
@@ -131,11 +152,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingTop: spacing.xl,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleWrap: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.ink,
+  },
+  headerSubtitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 9,
+    color: colors.outline,
+    letterSpacing: 1,
+    marginTop: 2,
   },
   content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    padding: spacing.md,
   },
   centerContainer: {
     flex: 1,
@@ -146,7 +196,7 @@ const styles = StyleSheet.create({
   bookmarkCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -159,22 +209,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pageBadge: {
-    backgroundColor: colors.accentSubtle,
+    backgroundColor: colors.surfaceContainer,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.sm,
+    paddingVertical: 5,
+    borderRadius: radius.xs,
     marginRight: spacing.md,
   },
   pageBadgeText: {
-    fontFamily: fonts.subheading,
-    fontSize: 13,
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 12,
     color: colors.accent,
   },
   infoCol: {
     flex: 1,
   },
   bookTitle: {
-    fontFamily: fonts.subheading,
+    fontFamily: fonts.heading,
     fontSize: 15,
     color: colors.ink,
   },
@@ -182,17 +232,18 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.inkSecondary,
-    marginTop: 2,
+    marginTop: 1,
   },
   noteText: {
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.ink,
     fontStyle: 'italic',
-    marginTop: 4,
+    marginTop: 3,
   },
   deleteBtn: {
-    padding: spacing.sm,
+    padding: spacing.xs + 2,
+    marginLeft: spacing.xs,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -200,9 +251,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
   },
   emptyTitle: {
-    fontFamily: fonts.subheading,
+    fontFamily: fonts.heading,
     fontSize: 18,
     color: colors.ink,
+    marginTop: spacing.sm,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
@@ -210,7 +262,7 @@ const styles = StyleSheet.create({
     color: colors.inkSecondary,
     textAlign: 'center',
     marginTop: 6,
-    lineHeight: 18,
+    lineHeight: 19,
     paddingHorizontal: spacing.xl,
   },
 });

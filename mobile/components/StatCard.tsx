@@ -28,13 +28,17 @@ export function StatCard({
       ]}
     >
       <View style={styles.topRow}>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, highlight && styles.highlightLabel]}>{label}</Text>
         {icon}
       </View>
       <Text style={[styles.value, highlight && styles.highlightValue]}>
         {value}
       </Text>
-      {subtext && <Text style={styles.subtext}>{subtext}</Text>}
+      {subtext && (
+        <Text style={[styles.subtext, highlight && styles.highlightSubtext]}>
+          {subtext}
+        </Text>
+      )}
     </View>
   );
 }
@@ -42,7 +46,7 @@ export function StatCard({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -59,17 +63,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   label: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.inkSecondary,
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 11,
+    color: colors.inkMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
+  },
+  highlightLabel: {
+    color: colors.accent,
   },
   value: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
+    fontFamily: fonts.headingBold,
+    fontSize: 26,
     color: colors.ink,
     marginTop: spacing.xs,
+    letterSpacing: -0.3,
   },
   highlightValue: {
     color: colors.accent,
@@ -77,7 +85,10 @@ const styles = StyleSheet.create({
   subtext: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.inkMuted,
+    color: colors.inkSecondary,
     marginTop: 2,
+  },
+  highlightSubtext: {
+    color: colors.inkSecondary,
   },
 });

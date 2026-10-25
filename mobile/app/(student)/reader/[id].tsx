@@ -753,8 +753,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerBookTitle: {
-    fontFamily: fonts.subheading,
-    fontSize: 15,
+    fontFamily: fonts.heading,
+    fontSize: 16,
     color: colors.ink,
   },
   subHeaderRow: {
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
   offlinePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8ECE6',
+    backgroundColor: colors.secondaryContainer,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: radius.full,
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
   offlinePillText: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 10,
-    color: colors.success,
+    color: colors.onSecondaryContainer,
   },
   pageIndicatorText: {
     fontFamily: fonts.bodyMedium,

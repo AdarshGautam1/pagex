@@ -74,7 +74,7 @@ export function Button({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.82}
       onPress={onPress}
       disabled={disabled || loading}
       style={[
@@ -120,27 +120,30 @@ const styles = StyleSheet.create({
   sizeSm: {
     paddingVertical: spacing.xs + 2,
     paddingHorizontal: spacing.md,
+    minHeight: 34,
   },
   sizeMd: {
-    paddingVertical: spacing.sm + 4,
+    paddingVertical: spacing.sm + 3,
     paddingHorizontal: spacing.lg,
+    minHeight: 46,
   },
   sizeLg: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
+    minHeight: 52,
   },
   primaryContainer: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primaryContainer, // Terracotta #9E3D1B
   },
   secondaryContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: colors.border,
   },
   outlineContainer: {
     backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: colors.accent,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   dangerContainer: {
     backgroundColor: colors.error,
@@ -149,27 +152,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   disabledContainer: {
-    backgroundColor: colors.border,
+    backgroundColor: colors.surfaceHigh,
     borderColor: colors.border,
     opacity: 0.6,
   },
   baseText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 15,
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    letterSpacing: 0.3,
   },
   primaryText: {
-    color: colors.white,
-    fontFamily: fonts.subheading,
+    color: '#FFFFFF',
   },
   secondaryText: {
     color: colors.ink,
   },
   outlineText: {
-    color: colors.accent,
-    fontFamily: fonts.subheading,
+    color: colors.ink,
   },
   ghostText: {
-    color: colors.inkSecondary,
+    color: colors.accent,
   },
   disabledText: {
     color: colors.inkMuted,

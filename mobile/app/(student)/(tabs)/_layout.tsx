@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,29 +13,23 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          position: 'absolute',
-          bottom: Math.max(insets.bottom, 16) + 10,
-          left: 18,
-          right: 18,
           backgroundColor: '#FFFFFF',
-          borderRadius: 28,
-          height: 64,
-          borderWidth: 1,
-          borderColor: 'rgba(212, 206, 196, 0.7)',
-          paddingBottom: 8,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          height: Platform.OS === 'ios' ? 62 + insets.bottom : 64,
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom + 4 : 8,
           paddingTop: 8,
-          shadowColor: '#181716',
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.08,
-          shadowRadius: 14,
-          elevation: 6,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.inkSecondary,
+        tabBarInactiveTintColor: colors.inkMuted,
         tabBarLabelStyle: {
-          fontFamily: fonts.bodyMedium,
+          fontFamily: fonts.bodySemiBold,
           fontSize: 11,
-          marginTop: -2,
+          letterSpacing: 0.4,
+          textTransform: 'uppercase',
+          marginTop: 2,
         },
       }}
     >
@@ -43,7 +38,10 @@ export default function TabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'book' : 'book-outline'} size={22} color={color} />
+            <View style={styles.tabIconWrapper}>
+              <Ionicons name={focused ? 'book' : 'book-outline'} size={21} color={color} />
+              {focused && <View style={styles.activeDot} />}
+            </View>
           ),
         }}
       />
@@ -52,16 +50,22 @@ export default function TabsLayout() {
         options={{
           title: 'Library',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'library' : 'library-outline'} size={22} color={color} />
+            <View style={styles.tabIconWrapper}>
+              <Ionicons name={focused ? 'library' : 'library-outline'} size={21} color={color} />
+              {focused && <View style={styles.activeDot} />}
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
-          title: 'Leaderboard',
+          title: 'Rankings',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'trophy' : 'trophy-outline'} size={22} color={color} />
+            <View style={styles.tabIconWrapper}>
+              <Ionicons name={focused ? 'trophy' : 'trophy-outline'} size={21} color={color} />
+              {focused && <View style={styles.activeDot} />}
+            </View>
           ),
         }}
       />
@@ -70,10 +74,30 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
+            <View style={styles.tabIconWrapper}>
+              <Ionicons name={focused ? 'person' : 'person-outline'} size={21} color={color} />
+              {focused && <View style={styles.activeDot} />}
+            </View>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIconWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    height: 26,
+  },
+  activeDot: {
+    position: 'absolute',
+    bottom: -5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.accent,
+  },
+});
